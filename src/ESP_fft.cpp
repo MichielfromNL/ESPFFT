@@ -1,12 +1,12 @@
 /*
-  ESP32 FFT
+  ESP FFT
   =========
   This provides a vanilla radix-2 FFT implementation and a test example.
   Author
   ------
   This code was written by [Robin Scheibler](http://www.robinscheibler.org) during rainy days in October 2017.
 
- "Classified" for ESP and ARduino by M. Steltman Mey 2021
+ "Classified" for ESP and ARduino by M. Steltman May 2021
   
   License
   -------
