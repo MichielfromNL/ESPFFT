@@ -10,22 +10,10 @@
   
   License
   -------
-  Copyright (c) 2017 Robin Scheibler
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
+  Copyright (c) 2017 Robin Scheibler , 2021 Michiel Steltman
+
+  The MIT license
+
 */
 #include <Arduino.h>
 #include "ESP_fft.h"
@@ -38,39 +26,25 @@ ESP_fft::ESP_fft(int size, int samplefreq,fft_type_t type, fft_direction_t direc
   _size(size), _samplefreq(samplefreq), _type(type),_direction(direction),_input(input),_output(output)  {
 
   // Check if the size is a power of two
-  if ((size & (size-1)) != 0)  // tests if size is a power of two
-    return ;
-
+  if ((size & (size-1)) != 0) {  // tests if size is a power of two
+    log_e("fftsize must be a power of two");
+    return;
+  }
   _binwidth = (float)_samplefreq/_size;
 
   // start configuration
   _flags = 0;
 
   // Allocate and precompute twiddle factors
-  _twiddle_factors = (float *)malloc(2 * _size * sizeof(float));
-
-  // Allocate input buffer
-  if (_input == NULL) {
-    if (_type == FFT_REAL)
-      _input = (float *)malloc(_size * sizeof(float));
-    else if (_type == FFT_COMPLEX)
-      _input = (float *)malloc(2 * _size * sizeof(float));
-    _flags |= FFT_OWN_INPUT_MEM;
-  }
-
-  // Allocate output buffer
-  if (_output == NULL)  {
-    if (_type == FFT_REAL) 
-      _output = (float *)malloc(_size * sizeof(float));
-    else if (_type == FFT_COMPLEX)
-      _output = (float *)malloc(2 * _size * sizeof(float));
-    _flags |= FFT_OWN_OUTPUT_MEM;
-  }
+  _twiddle_factors = new float[2 * _size];
 
 //   If malloc failed a constructing an instace there is something seriously wrong.
 //   Hence: abort(), pointless to continue
 //
-  if (_input == NULL || _output == NULL || _twiddle_factors == NULL) abort();
+  if ( _twiddle_factors == NULL) {
+    log_e("Out of memory");
+    return;
+  }
 
   // init twiddle
   float two_pi_by_n = TWO_PI / _size;
@@ -85,13 +59,7 @@ ESP_fft::ESP_fft(int size, int samplefreq,fft_type_t type, fft_direction_t direc
 // release memory
 ESP_fft::~ESP_fft()
 {
-  if (_flags & FFT_OWN_INPUT_MEM)
-    free(_input);
-
-  if (_flags & FFT_OWN_OUTPUT_MEM)
-    free(_output);
-
-  free(_twiddle_factors);
+  delete[] _twiddle_factors;
 }
 
 void ESP_fft::complexToMagnitude() {
@@ -127,10 +95,7 @@ void ESP_fft::removeDC() {
   }
 }
 
-
-
 // Hamming, copied from Arduino FFT
-//
 //
 void ESP_fft::hammingWindow() {
 
@@ -143,7 +108,6 @@ void ESP_fft::hammingWindow() {
     _input[_size - (i + 1)] *= weighingFactor;
   }
 }
-
 
 // execute
 //
@@ -166,7 +130,7 @@ void ESP_fft::execute()
 }
 
 //
-// Privat helpers, unmodified from c
+// Private helpers, unmodified from c
 // not necessary to pass parameters
 void ESP_fft::fft()
 {
@@ -394,7 +358,6 @@ void ESP_fft::fft_primitive(float *x, float *y, int n, int stride,int tw_stride)
     y[n + 2 * k] = x1r - x2r;
     y[n + 2 * k + 1] = x1i - x2i;
   }
-
 }
 
 void ESP_fft::split_radix_fft(float *x, float *y, int n, int stride,int tw_stride)
