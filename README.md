@@ -1,4 +1,4 @@
-## ESP32 FFT
+## ESP FFT
 
 I came across this ESP FFT library : [FFT for onboard ESP32](https://medium.com/swlh/how-to-perform-fft-onboard-esp32-and-get-both-frequency-and-amplitude-45ec5712d7da)
 It performs quite well, few miliisecs for a 512-long signal
@@ -16,7 +16,7 @@ The way it is used:
 
 float fft_output[FFT_N];
 
-#include "ESP32_fft.h"
+#include "ESP_fft.h"
 #include "fft_signal.h"
 
 // Create the class instance
